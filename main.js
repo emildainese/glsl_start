@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { vshader, fshader } from "./shaders/shaders";
+import { fshader } from "./shaders/fshader";
+import { vshader } from "./shaders/vshader";
 
 const scene = new THREE.Scene();
 const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
@@ -30,17 +31,7 @@ function render() {
   material.uniforms.u_resolution.value.x = window.innerWidth;
   material.uniforms.u_resolution.value.y = window.innerHeight;
   material.uniforms.u_time.value = clock.getElapsedTime();
-
   renderer.render(scene, camera);
-}
-
-function onMouseMove(event) {
-  event.preventDefault();
-  const mouseX = event.clientX * 2.0 - 1.0;
-  const mouseY = event.clientY * 2.0 + 1.0;
-
-  material.uniforms.u_mouse.value.x = mouseX;
-  material.uniforms.u_mouse.value.y = mouseY;
 }
 
 function animate() {
