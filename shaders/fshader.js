@@ -6,13 +6,12 @@ export const fshader = /*glsl*/ `
 	uniform vec2 u_mouse;
 	uniform float u_time;
 
-	vec2 NormalizedCoordinate() {
-		vec2 aspectRatio =  u_resolution / u_resolution.y;
-		return  (gl_FragCoord.xy * 2.0 - u_resolution) / u_resolution.y - 0.5 * aspectRatio;
+	vec2 UvCoordinate() {
+		return  (gl_FragCoord.xy - 0.5 * u_resolution) / u_resolution.y;
 	}
 
 	void main() {
-		vec2 uv = v_uv;
+		vec2 uv = UvCoordinate() ;
 		vec3 color = 0.5 + 0.5 * cos(u_time + uv.xyx + vec3(0.0, 2.0, 4.0));
 		
 		gl_FragColor = vec4(color, 1.0); 

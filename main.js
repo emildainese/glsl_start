@@ -19,7 +19,6 @@ const material = new THREE.ShaderMaterial({
 });
 
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(window.devicePixelRatio);
 document.body.appendChild(renderer.domElement);
 
 camera.position.z = 1;
