@@ -6,6 +6,14 @@ export const fshader = /*glsl*/ `
 	uniform vec2 u_mouse;
 	uniform float u_time;
 
+	vec3 Palette(float t) {
+		vec3 a = vec3(0.731, 1.098, 0.192);
+		vec3 b = vec3(0.358, 1.090, 0.657);
+		vec3 c = vec3(1.077, 0.360, 0.328);
+		vec3 d = vec3(0.965, 2.265, 0.837);
+      return a + b * cos(6.28318*(c * t + d));
+  }
+
 	vec2 UvCoordinate() {
 		return  (gl_FragCoord.xy - 0.5 * u_resolution) / u_resolution.y;
 	}
