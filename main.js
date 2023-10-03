@@ -26,6 +26,8 @@ const plane = new THREE.Mesh(geometry, material);
 
 scene.add(plane);
 
+// renderer.domElement.addEventListener("mousemove", (event) => onMouseMove(event, material));
+
 function render() {
   material.uniforms.u_resolution.value.x = window.innerWidth;
   material.uniforms.u_resolution.value.y = window.innerHeight;
