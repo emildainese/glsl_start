@@ -102,13 +102,12 @@ export const fshader = /*glsl*/ `
 		float cylinder = SdfCylinder(p, vec3(2., .5, 5.), vec3(4., .5, 6.), .5);
 		float prism    = SdfPrism(p - vec3(-7., 1., 11.), vec2(2.));
 
-		// float d = Union(sphere, plane);
-		// 		d = Union(capsule, d);
-		// 		d = Union(torus, d);
-		//       d = Union(cylinder, d);
-		//       d = Union(prism, d);
-
-		float d = Union(plane, box);
+		float d = Union(sphere, plane);
+				d = Union(capsule, d);
+				d = Union(torus, d);
+		      d = Union(cylinder, d);
+		      d = Union(prism, d);
+		      d = Union(box, d);
 
 		return d;
    }
