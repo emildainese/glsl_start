@@ -5,12 +5,11 @@ export const fshader = /*glsl*/ `
 	#define MAX_STEPS 100
 	#define SURFACE_DIST 0.01
 	#define MAX_DIST 100.
+	#define PI 3.1425
 
 	uniform vec2 u_resolution;
 	uniform vec2 u_mouse;
 	uniform float u_time;
-
-	// https://www.youtube.com/watch?v=AfKGMUDWfuE&list=PLGmrMu-IwbgtMxMiV3x4IrHPlPmg7FD-P&index=4
 
 	// 2D Rotation Matrix		
 	mat2 Rot(float a) {
@@ -82,7 +81,7 @@ export const fshader = /*glsl*/ `
 	}
 
 	float Difference(float base, float subtraction){
-		return Intersect(base, -subtraction);
+		return max(base, -subtraction);
 	}
 
 	float Interpolate(float shape1, float shape2, float amount){
@@ -90,25 +89,36 @@ export const fshader = /*glsl*/ `
 	}
 
   float RenderScene(vec3 p) {
-	   float sphere   = SdfSphere(p, vec4(0., 1., 6., 1.));
 		float plane    = SdfPlane(p);
-   	float capsule  = SdfCapsule(p, vec3(3.5, 2., 6.5), vec3(6., 2., 6.5), .5);
-		float torus    = SdfTorus(p - vec3(0., 2, 6.), vec2(2., .5));
 
-		vec3  bp   = p - vec3(0, 1., 6.);
-		bp.xz      *= Rot(u_time);
+		vec3 sp = p;
+		float scaleY = 1.;
+		float scaleZ = 1.;
+		sp *= vec3(1., scaleY , scaleZ);
+	   float sphereA   = SdfSphere(sp, vec4(0., 1., 0., 1.));
+		float sphereB  = SdfSphere(sp, vec4(1., 1., 0., 1.));
+
+		// float capsule  = SdfCapsule(p, vec3(3.5, 2., 6.5), vec3(6., 2., 6.5), .5);
+		// float torus    = SdfTorus(p - vec3(0., 2, 6.), vec2(2., .5));
+
+		vec3  bp   = p - vec3(0., 1., 0.);
+		bp.xz *= Rot(u_time);
 		float box  = SdfBox(bp, vec3(1.));
 
-		float cylinder = SdfCylinder(p, vec3(2., .5, 5.), vec3(4., .5, 6.), .5);
-		float prism    = SdfPrism(p - vec3(-7., 1., 11.), vec2(2.));
+		// float cylinder = SdfCylinder(p, vec3(2., .5, 5.), vec3(4., .5, 6.), .5);
+		// float prism    = SdfPrism(p - vec3(-7., 1., 11.), vec2(2.));
 
-		// float d = Union(sphere, plane);
+		// float spheres = Difference(sphereA, sphereB);
+		// float spheres = Intersect(sphereA, sphereB);
+		// float spheres = smin(sphereA, box, 0.5);
+		float spheres = Interpolate(sphereA, box, sin(u_time) * 0.5 + 0.5);
+
+		float d = Union(spheres , plane);
 		// 		d = Union(capsule, d);
 		// 		d = Union(torus, d);
 		//       d = Union(cylinder, d);
 		//       d = Union(prism, d);
-
-		float d = Union(plane, box);
+		//       d = Union(box, d);
 
 		return d;
    }
@@ -117,7 +127,7 @@ export const fshader = /*glsl*/ `
 	 float d0 = 0.;
 	 for(int i = 0; i < MAX_STEPS; ++i) {
 		vec3 p = ro + d0 * rd;
-		float ds = abs(RenderScene(p));
+		float ds = abs( RenderScene(p) );
 		d0 += ds;
 		if(ds < SURFACE_DIST || d0 > MAX_DIST) break;
 	 }
@@ -141,17 +151,17 @@ export const fshader = /*glsl*/ `
 
    // DIFFUSE LIGHT
    float GetLight(vec3 p, vec3 lightPos) {
-		lightPos.xz += vec2(cos(u_time), sin(u_time)) * 3.;
+		// lightPos.xz += vec2(cos(u_time), sin(u_time)) * 3.;
 		vec3 lightVec = normalize(lightPos - p);
 		vec3 normal = GetNormal(p);
 		float diff = clamp(dot(normal, lightVec), 0., 1.);
     	return diff * GetShadow(p, lightVec, normal);
    }
 
-	vec3 R(vec2 uv, vec3 p, vec3 l, float z) {
+	vec3 LookAt(vec2 uv, vec3 p, vec3 l, float z) {
 		vec3 f = normalize(l - p),
 			  r = normalize( cross(vec3(0, 1, 0), f)),
-			  u = cross(f,r),
+			  u = cross(f, r),
 			  c = p + f * z,
 			  i = c + uv.x * r + uv.y * u,
 			  d = normalize(i - p);
@@ -165,16 +175,24 @@ export const fshader = /*glsl*/ `
 	void main() {
 		vec2 uv = UvCoordinate() ;
 		vec3 color  = vec3(0.0);
+		vec2 m = u_mouse.xy / u_resolution.xy;
 
-		vec3 ro = vec3(0, 1, 0);
-		vec3 rd = normalize(vec3(uv.x, uv.y, 1.));
-		float d =  RayMarch(ro, rd) ;
+		vec3 ro = vec3(0, 3., -7.);
+		ro.yz *= Rot(m.y * PI);
+		ro.xz *= Rot(m.x * PI);
 
-		vec3 p = ro + rd * d;
-		float diff = GetLight(p, vec3(0., 6., 1.));
-		
-		color = vec3(diff);
-			
+		vec3 rd = LookAt(uv, ro, vec3(0, 0, 0), .7);
+		float d = RayMarch(ro, rd) ;
+
+		if(d < MAX_DIST) {
+			vec3 p = ro + rd * d;
+			vec3 lp = vec3(-1., 4., -1.);
+			float dif = GetLight(p, lp);
+			color = vec3(dif);
+		}
+
+		color = pow(color, vec3(.4545));
+
 		gl_FragColor = vec4(color, 1.0); 
 	}
 `;

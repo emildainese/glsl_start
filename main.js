@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { fshader } from "./shaders/fshader";
 import { vshader } from "./shaders/vshader";
+import { moveCamera } from "./util/mouse";
 
 const scene = new THREE.Scene();
 const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
@@ -26,7 +27,7 @@ const plane = new THREE.Mesh(geometry, material);
 
 scene.add(plane);
 
-// renderer.domElement.addEventListener("mousemove", (event) => onMouseMove(event, material));
+moveCamera(renderer, material);
 
 function render() {
   material.uniforms.u_resolution.value.x = window.innerWidth;
